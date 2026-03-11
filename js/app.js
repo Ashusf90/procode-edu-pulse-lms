@@ -29,6 +29,125 @@ async function loadData() {
 }
 
 // ── Page Renderers ──
+function showWelcomeModel() {
+  const app = $('#app');
+
+  if (localStorage.getItem('procode_onboarding_done') === 'true') return;
+
+  let slide = 0;
+
+  const slides = [
+    {
+      title: "Welcome to ProCode 🚀",
+      text: "Learn web development with structured lessons, projects, and interactive coding."
+    },
+    {
+      title: "Interactive Coding 💻",
+      text: "Practice directly in the browser using the built-in code editor with live preview."
+    },
+    {
+      title: "Track Your Progress 📊",
+      text: "Courses remember your progress and show completion percentages."
+    },
+    {
+      title: "Build Your Portfolio 🎯",
+      text: "Every challenge you complete becomes part of your developer portfolio."
+    }
+  ];
+
+  function renderSlide() {
+    const s = slides[slide];
+
+    app.innerHTML = `
+      <div class="modal-overlay active">
+
+        <div class="modal animate-scaleIn text-center">
+
+          <div class="mb-6">
+            <span class="badge badge-primary mb-4">Getting Started</span>
+            <h3 class="mb-2">${s.title}</h3>
+            <p class="text-muted">${s.text}</p>
+          </div>
+
+          <div class="flex justify-center gap-2 mb-6">
+            ${slides.map((_, i) => `
+              <span 
+                style="
+                  width:10px;
+                  height:10px;
+                  border-radius:var(--radius-full);
+                  background:${i === slide ? 'var(--brand-primary)' : 'var(--border-subtle)'};
+                  display:inline-block;
+                ">
+              </span>
+            `).join('')}
+          </div>
+
+          ${slide === slides.length - 1 ? `
+            <div class="input-group mb-6">
+              <label>Your Name</label>
+              <input 
+                id="welcome-name"
+                class="input"
+                placeholder="Enter your name"
+                type="text"
+                required
+              />
+            </div>
+          ` : ''}
+
+          <div class="flex justify-center gap-3">
+            ${slide > 0 ? `
+              <button id="welcome-prev" class="btn btn-ghost">
+                Back
+              </button>
+            ` : ``}
+
+            <button id="welcome-next" class="btn btn-primary">
+              ${slide === slides.length - 1 ? 'Get Started →' : 'Next →'}
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    `;
+
+    const next = $('#welcome-next');
+    const prev = $('#welcome-prev');
+
+    if (prev) {
+      prev.onclick = () => {
+        slide--;
+        renderSlide();
+      };
+    }
+
+     next.onclick = async() => {
+      if (slide === slides.length - 1) {
+        const name = $('#welcome-name')?.value?.trim();
+
+        if (name) {
+          localStorage.setItem('procode_user_name', name);
+        }
+
+        localStorage.setItem('procode_onboarding_done', 'true');  
+        // remove modal UI
+    const overlay = document.querySelector('.modal-overlay');
+    if (overlay) overlay.remove();
+        await initApp();
+        location.hash = "/courses";
+
+      } else {
+        slide++;
+        renderSlide();
+      }
+    };
+  }
+
+  renderSlide();
+}
+
 
 function renderLanding() {
     const app = $('#app');
@@ -681,14 +800,15 @@ function renderProfile() {
 async function initApp() {
     // Init theme
     initTheme();
+    
+    const onboardingDone = localStorage.getItem("procode_onboarding_done") === "true";
 
-    // Render navbar
-    renderNavbar();
-
-    // Load data
-    await loadData();
-
-    // Setup router
+    if (!onboardingDone) {
+      showWelcomeModel();
+    } else {
+  renderNavbar();
+  await loadData();
+  // Setup router
     const router = new Router();
 
     router
@@ -699,6 +819,10 @@ async function initApp() {
         .on('/portfolio', () => renderPortfolio())
         .on('/profile', () => renderProfile())
         .on('*', () => renderLanding());
+}
+
+
+    
 }
 
 // Boot
