@@ -27,6 +27,17 @@ async function loadData() {
     quizzesData = quizzes.quizzes;
     challengesData = challenges.challenges;
 }
+function transitionPage(renderFn) {
+    const app = $('#app');
+
+    // fade out
+    app.style.opacity = 0;
+
+    setTimeout(() => {
+        renderFn();        // render new page
+        app.style.opacity = 1;  // fade in
+    }, 200);
+}
 
 // ── Page Renderers ──
 
@@ -692,13 +703,13 @@ async function initApp() {
     const router = new Router();
 
     router
-        .on('/', () => renderLanding())
-        .on('/courses', () => renderCoursesPage())
-        .on('/course/:courseId', (params) => renderCourse(params))
-        .on('/lesson/:courseId/:lessonId', (params) => renderLesson(params))
-        .on('/portfolio', () => renderPortfolio())
-        .on('/profile', () => renderProfile())
-        .on('*', () => renderLanding());
+.on('/', () => transitionPage(renderLanding))
+  .on('/courses', () => transitionPage(renderCoursesPage))
+  .on('/course/:courseId', (params) => transitionPage(() => renderCourse(params)))
+  .on('/lesson/:courseId/:lessonId', (params) => transitionPage(() => renderLesson(params)))
+  .on('/portfolio', () => transitionPage(renderPortfolio))
+  .on('/profile', () => transitionPage(renderProfile))
+  .on('*', () => transitionPage(renderLanding));
 }
 
 // Boot
